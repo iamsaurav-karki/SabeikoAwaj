@@ -103,7 +103,11 @@ A comprehensive platform for citizens to submit opinions, suggestions, and compl
 
 4. **Run Development Servers**
    ```bash
-   npm run dev
+   cd /client
+   npm start
+   cd /server
+   npm start
+   
    ```
 
 5. **Access the Application**
@@ -159,4 +163,4 @@ sabeiko-awaj/
 ## License
 
 MIT License - see LICENSE file for details 
->>>>>>> 85bb3fa (first commit)
+<<<<<<< HEAD
