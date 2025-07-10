@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Sabeiko Awaj
 
 Sabeiko Awaj is a Nepali e-governance platform that allows citizens to register complaints, suggestions, and opinions about different government departments and authorities. It supports submissions from both registered and anonymous users.
@@ -163,4 +162,3 @@ sabeiko-awaj/
 ## License
 
 MIT License - see LICENSE file for details 
-<<<<<<< HEAD
