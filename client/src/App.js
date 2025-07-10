@@ -11,7 +11,7 @@ import ContactForm from './components/ContactForm';
 import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-router-dom';
 import './App.css';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL ||  'http://localhost:5000/api';
 
 // Toast context and component
 const ToastContext = createContext();
