@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { FaThumbsUp, FaEye } from 'react-icons/fa';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = process.env.NODE_ENV === 'production' ? 'https://sabeiko.ksaurav.com.np/api' : 'http://localhost:5000/api';
 
 export default function BrowseSubmissions() {
   const [submissions, setSubmissions] = useState([]);

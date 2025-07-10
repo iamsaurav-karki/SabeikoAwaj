@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FaEye, FaEdit, FaTrash, FaCheck, FaExchangeAlt, FaUserCog } from 'react-icons/fa';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = process.env.NODE_ENV === 'production' ? 'https://sabeiko.ksaurav.com.np/api' : 'http://localhost:5000/api';
 
 const DEPARTMENTS = [
   'Home Affairs',
