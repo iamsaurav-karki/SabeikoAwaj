@@ -1,4 +1,4 @@
-const { registerUser, authenticateUser } = require('../models/user');
+const { registerUser, authenticateUser, findUserByEmail } = require('../models/user');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
@@ -9,10 +9,18 @@ exports.register = async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'All fields required' });
     }
+    
+    // Check if user already exists
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+    
     const user = await registerUser({ name, email, password });
     res.status(201).json({ message: 'User registered', user });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Registration error:', err);
+    res.status(500).json({ error: err.message || 'Registration failed. Please check if the database is running and tables are initialized.' });
   }
 };
 

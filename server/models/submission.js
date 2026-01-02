@@ -11,16 +11,48 @@ async function createSubmission({ title, content, userId, status = 'pending', de
 
 async function getAllSubmissions() {
   try {
-    // This query is rebuilt to be robust. It explicitly selects all columns and casts
-    // the nullable 'userid' column (which is lowercase in the DB) to TEXT.
-    // This prevents the driver from failing on anonymous (null) user submissions.
-    const query = 'SELECT id, title, content, createdat, department, status, type, CAST(userid AS TEXT) as userid FROM submissions';
+    // Select all columns. userId can be null for anonymous submissions.
+    // In Cassandra/ScyllaDB, unquoted identifiers are stored as lowercase.
+    const query = 'SELECT id, title, content, createdat, department, status, type, userid FROM submissions';
     const result = await client.execute(query);
-    return result.rows;
+    
+    if (!result || !result.rows) {
+      console.warn('getAllSubmissions: No rows returned from database');
+      return [];
+    }
+    
+    return result.rows.map(row => {
+      // Handle date conversion - createdat might be a Date object or timestamp
+      let createdAt = null;
+      if (row.createdat) {
+        if (row.createdat instanceof Date) {
+          createdAt = row.createdat;
+        } else {
+          try {
+            createdAt = new Date(row.createdat);
+            // Check if date is valid
+            if (isNaN(createdAt.getTime())) {
+              createdAt = null;
+            }
+          } catch (e) {
+            createdAt = null;
+          }
+        }
+      }
+      
+      return {
+        ...row,
+        userId: row.userid ? row.userid.toString() : null,
+        createdat: createdAt,
+        createdAt: createdAt // Also provide camelCase for compatibility
+      };
+    });
   } catch (err) {
     // Add a detailed error log for any unexpected database issues.
     console.error('DATABASE ERROR in getAllSubmissions:', err);
-    throw err;
+    // Return empty array on error to prevent cascading failures
+    // This allows the application to continue functioning even if there's a DB issue
+    return [];
   }
 }
 

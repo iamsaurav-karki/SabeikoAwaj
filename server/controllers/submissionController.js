@@ -49,31 +49,122 @@ exports.getById = async (req, res) => {
 exports.getRecent = async (req, res) => {
   try {
     const submissions = await getAllSubmissions();
-    // Filter out submissions with invalid or missing createdat
-    const validSubs = submissions.filter(s => s.createdat && !isNaN(new Date(s.createdat)));
+    if (!submissions || submissions.length === 0) {
+      return res.json([]);
+    }
+    
+    // Filter out submissions with invalid or missing createdat (handle both camelCase and lowercase)
+    const validSubs = submissions.filter(s => {
+      const date = s.createdat || s.createdAt;
+      if (!date) return false;
+      // If it's already a Date object, check if it's valid
+      if (date instanceof Date) {
+        return !isNaN(date.getTime());
+      }
+      // Otherwise, try to parse it
+      try {
+        const parsed = new Date(date);
+        return !isNaN(parsed.getTime());
+      } catch (e) {
+        return false;
+      }
+    });
+    
+    if (validSubs.length === 0) {
+      return res.json([]);
+    }
+    
     // Sort by createdAt desc and take 5
-    const sorted = validSubs.sort((a, b) => new Date(b.createdat) - new Date(a.createdat));
-    res.json(sorted.slice(0, 5));
+    const sorted = validSubs.sort((a, b) => {
+      try {
+        const aDate = a.createdat || a.createdAt;
+        const bDate = b.createdat || b.createdAt;
+        const aTime = aDate instanceof Date ? aDate.getTime() : new Date(aDate).getTime();
+        const bTime = bDate instanceof Date ? bDate.getTime() : new Date(bDate).getTime();
+        if (isNaN(aTime) || isNaN(bTime)) return 0;
+        return bTime - aTime;
+      } catch (e) {
+        return 0;
+      }
+    });
+    
+    // Add votes to each submission
+    const submissionsWithVotes = await Promise.all(
+      sorted.slice(0, 5).map(async (sub) => {
+        try {
+          const votes = sub.id ? await countVotes(sub.id) : 0;
+          return { ...sub, votes: votes.toString() };
+        } catch (e) {
+          console.error('Error counting votes for submission', sub.id, ':', e);
+          return { ...sub, votes: '0' };
+        }
+      })
+    );
+    
+    res.json(submissionsWithVotes);
   } catch (err) {
     console.error('Error in getRecent:', err);
-    res.status(500).json({ error: err.message });
+    // Return empty array instead of error to prevent frontend crashes
+    res.status(200).json([]);
   }
 };
 
 exports.getRecentResolved = async (req, res) => {
   try {
     const submissions = await getAllSubmissions();
+    if (!submissions || submissions.length === 0) {
+      return res.json([]);
+    }
+    
     // Only resolved submissions
-    const resolvedSubs = submissions.filter(s => s.status === 'resolved');
+    const resolvedSubs = submissions.filter(s => {
+      if (!s.status) return false;
+      const statusLower = s.status.toLowerCase();
+      return statusLower === 'resolved';
+    });
+    
+    if (resolvedSubs.length === 0) {
+      return res.json([]);
+    }
+    
     // Sort by updatedAt (if available) or createdAt desc
     const sorted = resolvedSubs.sort((a, b) => {
-      const aDate = a.updatedat ? new Date(a.updatedat) : new Date(a.createdat);
-      const bDate = b.updatedat ? new Date(b.updatedat) : new Date(b.createdat);
-      return bDate - aDate;
+      try {
+        const aDate = a.updatedat || a.updatedAt || a.createdat || a.createdAt;
+        const bDate = b.updatedat || b.updatedAt || b.createdat || b.createdAt;
+        
+        if (!aDate && !bDate) return 0;
+        if (!aDate) return 1;
+        if (!bDate) return -1;
+        
+        const aTime = aDate instanceof Date ? aDate.getTime() : new Date(aDate).getTime();
+        const bTime = bDate instanceof Date ? bDate.getTime() : new Date(bDate).getTime();
+        
+        if (isNaN(aTime) || isNaN(bTime)) return 0;
+        
+        return bTime - aTime;
+      } catch (e) {
+        return 0;
+      }
     });
-    res.json(sorted.slice(0, 5));
+    
+    // Add votes to each submission
+    const submissionsWithVotes = await Promise.all(
+      sorted.slice(0, 5).map(async (sub) => {
+        try {
+          const votes = sub.id ? await countVotes(sub.id) : 0;
+          return { ...sub, votes: votes.toString() };
+        } catch (e) {
+          console.error('Error counting votes for submission', sub.id, ':', e);
+          return { ...sub, votes: '0' };
+        }
+      })
+    );
+    
+    res.json(submissionsWithVotes);
   } catch (err) {
     console.error('Error in getRecentResolved:', err);
-    res.status(500).json({ error: err.message });
+    // Return empty array instead of error to prevent frontend crashes
+    res.status(200).json([]);
   }
 }; 

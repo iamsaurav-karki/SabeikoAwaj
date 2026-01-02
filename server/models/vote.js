@@ -6,9 +6,19 @@ async function addVote(submissionId, userId) {
 }
 
 async function countVotes(submissionId) {
-  const query = 'SELECT COUNT(*) FROM votes WHERE submissionId = ?';
-  const result = await client.execute(query, [submissionId], { prepare: true });
-  return result.rows[0]['count'];
+  try {
+    if (!submissionId) return 0;
+    const query = 'SELECT COUNT(*) FROM votes WHERE submissionId = ?';
+    const result = await client.execute(query, [submissionId], { prepare: true });
+    if (result.rows && result.rows[0]) {
+      // Handle different possible column names
+      return result.rows[0]['count'] || result.rows[0].count || 0;
+    }
+    return 0;
+  } catch (err) {
+    console.error('Error counting votes for submission', submissionId, ':', err);
+    return 0; // Return 0 instead of throwing to prevent cascading failures
+  }
 }
 
 module.exports = { addVote, countVotes }; 

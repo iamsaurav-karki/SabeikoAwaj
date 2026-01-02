@@ -8,7 +8,11 @@ const PORT = process.env.PORT || 5000;
 
 //app.use(cors());
 app.use(cors({
-    origin: ['http://sabeiko.ksaurav.com.np', 'https://sabeiko.ksaurav.com.np'],
+    origin: [
+        'http://localhost:3000',
+        'http://sabeiko.ksaurav.com.np', 
+        'https://sabeiko.ksaurav.com.np'
+    ],
     credentials: true
 }));
 app.use(bodyParser.json());

@@ -6,13 +6,25 @@ exports.getStats = async (req, res) => {
   try {
     const submissions = await getAllSubmissions();
     const total = submissions.length;
-    const resolved = submissions.filter(s => s.status === 'resolved').length;
-    const inProgress = submissions.filter(s => s.status === 'pending' || s.status === 'in progress').length;
-    const usersResult = await client.execute('SELECT COUNT(*) FROM users');
-    const activeUsers = usersResult.rows[0]['count'] || 0;
+    const resolved = submissions.filter(s => s.status && s.status.toLowerCase() === 'resolved').length;
+    const inProgress = submissions.filter(s => {
+      const status = s.status ? s.status.toLowerCase() : '';
+      return status === 'pending' || status === 'in progress';
+    }).length;
+    
+    let activeUsers = 0;
+    try {
+      const usersResult = await client.execute('SELECT COUNT(*) FROM users');
+      activeUsers = usersResult.rows[0] && usersResult.rows[0]['count'] ? parseInt(usersResult.rows[0]['count']) : 0;
+    } catch (userErr) {
+      console.error('Error counting users:', userErr);
+      // Continue with 0 if user count fails
+    }
+    
     res.json({ total, resolved, inProgress, activeUsers });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in getStats:', err);
+    res.status(500).json({ error: err.message || 'Failed to fetch statistics' });
   }
 };
 
@@ -29,9 +41,26 @@ exports.getAll = async (req, res) => {
         }
       })
     );
-    res.json(submissionsWithVotes.sort((a, b) => new Date(b.createdat) - new Date(a.createdat)));
+    // Sort by createdat, handling both Date objects and timestamps
+    const sorted = submissionsWithVotes.sort((a, b) => {
+      const aDate = a.createdat || a.createdAt;
+      const bDate = b.createdat || b.createdAt;
+      
+      if (!aDate && !bDate) return 0;
+      if (!aDate) return 1;
+      if (!bDate) return -1;
+      
+      const aTime = aDate instanceof Date ? aDate.getTime() : new Date(aDate).getTime();
+      const bTime = bDate instanceof Date ? bDate.getTime() : new Date(bDate).getTime();
+      
+      if (isNaN(aTime) || isNaN(bTime)) return 0;
+      
+      return bTime - aTime;
+    });
+    res.json(sorted);
   } catch (err) {
-    res.status(500).json({ error: 'A server error occurred while fetching submissions.' });
+    console.error('Error in admin getAll:', err);
+    res.status(500).json({ error: err.message || 'A server error occurred while fetching submissions.' });
   }
 };
 

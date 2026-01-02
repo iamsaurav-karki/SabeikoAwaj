@@ -37,8 +37,20 @@ async function initTables() {
       userId UUID,
       status TEXT,
       department TEXT,
-      createdAt TIMESTAMP
+      createdAt TIMESTAMP,
+      type TEXT
     )`);
+    
+    // Add type column if table exists but column doesn't (migration)
+    try {
+      await client.execute(`ALTER TABLE submissions ADD type TEXT`);
+      console.log('Added type column to submissions table.');
+    } catch (err) {
+      // Column might already exist, ignore error
+      if (!err.message.includes('already exists') && !err.message.includes('Invalid')) {
+        console.log('Note: type column may already exist or table is new.');
+      }
+    }
     await client.execute(`CREATE TABLE IF NOT EXISTS votes (
       submissionId UUID,
       userId UUID,

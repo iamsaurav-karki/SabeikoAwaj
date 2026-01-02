@@ -1,11 +1,72 @@
 version: '3.8'
+
 services:
-  scylla:
-    image: scylladb/scylla
+  # ScyllaDB Database
+  scylladb:
+    image: scylladb/scylla:5.4
+    container_name: sabeiko-scylladb
     ports:
       - "9042:9042"
     volumes:
       - scylla-data:/var/lib/scylla
+    environment:
+      - SCYLLA_CLUSTER_NAME=SabeikoCluster
+      - SCYLLA_DATACENTER=datacenter1
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status | grep -E '^UN'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - sabeiko-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: sabeiko-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DB_HOST=scylladb
+      - DB_KEYSPACE=sabeiko_awaj
+      - DB_DATACENTER=datacenter1
+      - JWT_SECRET=${JWT_SECRET:-changeme-in-production}
+    depends_on:
+      scylladb:
+        condition: service_healthy
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    networks:
+      - sabeiko-network
+    restart: unless-stopped
+    command: sh -c "sleep 10 && node models/initTables.js && node index.js"
+
+  # Frontend
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: sabeiko-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_BASE_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    networks:
+      - sabeiko-network
+    restart: unless-stopped
 
 volumes:
-  scylla-data: 
+  scylla-data:
+    driver: local
+
+networks:
+  sabeiko-network:
+    driver: bridge

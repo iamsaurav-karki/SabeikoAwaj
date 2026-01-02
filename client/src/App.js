@@ -4,6 +4,7 @@ import RegisterForm from './components/RegisterForm';
 import LoginForm from './components/LoginForm';
 import AdminLoginForm from './components/AdminLoginForm';
 import AdminDashboard from './components/AdminDashboard';
+import UserDashboard from './components/UserDashboard';
 import SubmissionForm from './components/SubmissionForm';
 import SubmissionCharts from './components/SubmissionCharts';
 import BrowseSubmissions from './components/BrowseSubmissions';
@@ -160,7 +161,7 @@ function App() {
                   {user.role === 'admin' ? (
                     <li><Link to="/admin" className="nav-btn danger" style={{ fontSize: 14, padding: '0.4rem 0.9rem', textDecoration: 'none' }}>Admin Panel</Link></li>
                   ) : (
-                    <li><button className="nav-btn primary" style={{ fontSize: 14, padding: '0.4rem 0.9rem' }} onClick={() => setShowDashboard(true)}>Dashboard</button></li>
+                    <li><Link to="/dashboard" className="nav-btn primary" style={{ fontSize: 14, padding: '0.4rem 0.9rem', textDecoration: 'none' }}>Dashboard</Link></li>
                   )}
                   <li><button className="nav-btn danger" style={{ fontSize: 14, padding: '0.4rem 0.9rem' }} onClick={handleLogout}>Logout</button></li>
                 </>
@@ -182,29 +183,187 @@ function App() {
         {showSubmission && <Modal onClose={() => setShowSubmission(false)}><SubmissionForm onSuccess={() => setShowSubmission(false)} /></Modal>}
         {showDashboard && user && (
           <Modal onClose={() => setShowDashboard(false)}>
-            <div style={{ maxWidth: 600, margin: '0 auto', background: '#fff', padding: 32, borderRadius: 16, boxShadow: '0 2px 12px #0001' }}>
-              <h2 style={{ textAlign: 'center', color: '#1976d2', fontWeight: 800, marginBottom: 18 }}>Your Submissions</h2>
-              {userSubsLoading ? <div>Loading...</div> : userSubs.length === 0 ? <div>No submissions yet.</div> : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: '#f7fafd' }}>
-                      <th style={{ padding: 8, border: '1px solid #eee' }}>Title</th>
-                      <th style={{ padding: 8, border: '1px solid #eee' }}>Department</th>
-                      <th style={{ padding: 8, border: '1px solid #eee' }}>Status</th>
-                      <th style={{ padding: 8, border: '1px solid #eee' }}>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {userSubs.map(sub => (
-                      <tr key={sub.id}>
-                        <td style={{ padding: 8, border: '1px solid #eee' }}>{sub.title}</td>
-                        <td style={{ padding: 8, border: '1px solid #eee' }}>{sub.department}</td>
-                        <td style={{ padding: 8, border: '1px solid #eee' }}>{sub.status}</td>
-                        <td style={{ padding: 8, border: '1px solid #eee' }}>{sub.createdat ? new Date(sub.createdat).toLocaleString() : ''}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div style={{ 
+              maxWidth: 1000, 
+              margin: '0 auto', 
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)', 
+              padding: '40px 36px', 
+              borderRadius: 24, 
+              boxShadow: '0 12px 48px rgba(25, 118, 210, 0.15), 0 4px 16px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(25, 118, 210, 0.1)'
+            }}>
+              <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                <div style={{ 
+                  display: 'inline-block',
+                  background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                  padding: '12px 24px',
+                  borderRadius: 12,
+                  marginBottom: 16,
+                  boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)'
+                }}>
+                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 14, letterSpacing: 1, textTransform: 'uppercase' }}>📊 Your Dashboard</span>
+                </div>
+                <h2 style={{ 
+                  textAlign: 'center', 
+                  color: '#1976d2', 
+                  fontWeight: 900, 
+                  marginBottom: 8,
+                  fontSize: 32,
+                  letterSpacing: 0.5
+                }}>Your Submissions</h2>
+                <p style={{ color: '#666', fontSize: 15, marginTop: 4 }}>Track and manage all your submissions</p>
+              </div>
+
+              {userSubsLoading ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '60px 20px',
+                  color: '#888',
+                  fontSize: 16
+                }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div>
+                  <div>Loading your submissions...</div>
+                </div>
+              ) : userSubs.length === 0 ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '60px 20px',
+                  background: '#f8f9ff',
+                  borderRadius: 16,
+                  border: '2px dashed #e3eafc'
+                }}>
+                  <div style={{ fontSize: 64, marginBottom: 16 }}>📝</div>
+                  <h3 style={{ color: '#1976d2', fontWeight: 700, marginBottom: 8 }}>No Submissions Yet</h3>
+                  <p style={{ color: '#888', fontSize: 15 }}>Start by submitting your first complaint, suggestion, or opinion!</p>
+                </div>
+              ) : (
+                <div style={{ 
+                  background: '#fff', 
+                  borderRadius: 16, 
+                  overflow: 'hidden',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+                  border: '1px solid #e3eafc'
+                }}>
+                  <div style={{ 
+                    background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                    padding: '20px 24px',
+                    color: '#fff'
+                  }}>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '2fr 1.5fr 1.2fr 1.5fr',
+                      gap: 16,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      letterSpacing: 0.5,
+                      textTransform: 'uppercase'
+                    }}>
+                      <div>Title</div>
+                      <div>Department</div>
+                      <div>Status</div>
+                      <div>Date</div>
+                    </div>
+                  </div>
+                  <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                    {userSubs.map((sub, idx) => {
+                      const statusColors = {
+                        'pending': { bg: '#fff3cd', color: '#856404', icon: '⏳' },
+                        'in progress': { bg: '#d1ecf1', color: '#0c5460', icon: '🔄' },
+                        'resolved': { bg: '#d4edda', color: '#155724', icon: '✅' },
+                        'rejected': { bg: '#f8d7da', color: '#721c24', icon: '❌' }
+                      };
+                      const statusInfo = statusColors[sub.status?.toLowerCase()] || statusColors['pending'];
+                      const date = sub.createdat || sub.createdAt;
+                      
+                      return (
+                        <div 
+                          key={sub.id} 
+                          style={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: '2fr 1.5fr 1.2fr 1.5fr',
+                            gap: 16,
+                            padding: '20px 24px',
+                            borderBottom: idx < userSubs.length - 1 ? '1px solid #e3eafc' : 'none',
+                            transition: 'background 0.2s',
+                            alignItems: 'center'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#f8f9ff'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                        >
+                          <div style={{ fontWeight: 600, color: '#333', fontSize: 15, lineHeight: 1.4 }}>
+                            {sub.title}
+                          </div>
+                          <div style={{ color: '#666', fontSize: 14, fontWeight: 500 }}>
+                            {sub.department}
+                          </div>
+                          <div>
+                            <span style={{ 
+                              display: 'inline-block',
+                              background: statusInfo.bg,
+                              color: statusInfo.color,
+                              padding: '6px 14px',
+                              borderRadius: 20,
+                              fontSize: 13,
+                              fontWeight: 700,
+                              textTransform: 'capitalize',
+                              border: `1px solid ${statusInfo.color}20`
+                            }}>
+                              {statusInfo.icon} {sub.status || 'pending'}
+                            </span>
+                          </div>
+                          <div style={{ color: '#888', fontSize: 13, fontWeight: 500 }}>
+                            {date ? new Date(date).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) : 'N/A'}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {userSubs.length > 0 && (
+                <div style={{ 
+                  marginTop: 24, 
+                  padding: '20px', 
+                  background: 'linear-gradient(135deg, #e3f2fd 0%, #f8f9ff 100%)',
+                  borderRadius: 12,
+                  textAlign: 'center',
+                  border: '1px solid #e3eafc'
+                }}>
+                  <div style={{ color: '#1976d2', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
+                    📈 Summary
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 32, flexWrap: 'wrap' }}>
+                    <div>
+                      <div style={{ fontSize: 24, fontWeight: 900, color: '#1976d2' }}>{userSubs.length}</div>
+                      <div style={{ fontSize: 12, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5 }}>Total</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 24, fontWeight: 900, color: '#27ae60' }}>
+                        {userSubs.filter(s => s.status?.toLowerCase() === 'resolved').length}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5 }}>Resolved</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 24, fontWeight: 900, color: '#f1c40f' }}>
+                        {userSubs.filter(s => s.status?.toLowerCase() === 'in progress').length}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5 }}>In Progress</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 24, fontWeight: 900, color: '#e74c3c' }}>
+                        {userSubs.filter(s => s.status?.toLowerCase() === 'pending').length}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5 }}>Pending</div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </Modal>
@@ -218,6 +377,11 @@ function App() {
         <Routes>
           <Route path="/browse" element={<BrowseSubmissions />} />
           <Route path="/contact" element={<ContactForm />} />
+          <Route path="/dashboard" element={
+            <UserRoute user={user}>
+              <UserDashboard />
+            </UserRoute>
+          } />
           <Route path="/admin" element={
             <AdminRoute user={user}>
               <AdminDashboard />
@@ -422,6 +586,13 @@ function ResolvedSubmissionCard({ title, department, resolvedAt, upvotes }) {
       <div style={{ color: '#888', fontSize: 14 }}>👍 {upvotes} upvotes</div>
     </div>
   );
+}
+
+function UserRoute({ user, children }) {
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
 }
 
 function AdminRoute({ user, children }) {
