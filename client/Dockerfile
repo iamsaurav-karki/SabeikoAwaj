@@ -2,6 +2,12 @@
 # Build stage
 FROM node:18-alpine AS builder
 
+# Accept build arguments
+ARG REACT_APP_API_BASE_URL=http://localhost:5000/api
+
+# Set environment variables for build
+ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
+
 # Set working directory
 WORKDIR /app
 
